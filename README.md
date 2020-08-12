@@ -1,6 +1,6 @@
 # EloPog
+Elo Algorithm for the POG Discord Bot based on a Custom Chess Elo Algorithm 
 
-Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max
 
 ## To Do List
 ### Compute Base Elo
@@ -15,6 +15,8 @@ Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max
 - [ ] Compute Individual Elo based on the Winning/Losing Streak
 
 ## Algo Explain
+Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max
+
 At the end of each match,  
 
 ## Data Example:
