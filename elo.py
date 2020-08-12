@@ -1,6 +1,7 @@
 import random
 
-class Player():
+
+class Player:
     def __init__(self, name):
         self.name = name
         self.elo = 2500
@@ -13,6 +14,7 @@ class Player():
 
     def __str__(self):
         return "{name} -> {elo}".format(name=self.name, elo=self.elo)
+
 
 players = [
     Player("1"),
@@ -32,7 +34,8 @@ players = [
     Player("15"),
 ]
 
-class Stats():
+
+class Stats:
     def __init__(self):
         self.score = 0
         self.netScore = 0
@@ -40,12 +43,12 @@ class Stats():
         self.death = 0
 
     def __repr__(self):
-        return "Score {score} NetScore {netScore}".format(score=self.score, netScore=self.netScore)
+        return "Score {score} NetScore {netScore}".format(
+            score=self.score, netScore=self.netScore
+        )
 
-    def __repr__(self):
-        return "Score {score} NetScore {netScore}".format(score=self.score, netScore=self.netScore)
 
-class Elo():
+class Elo:
     def __init__(self):
         self.K = 40
         self.WeightNetScore = 5
@@ -55,7 +58,7 @@ class Elo():
 
     def getAvgElo(self, team):
         players = team["players"]
-        return (sum([player[0].elo for player in players]) / len(players))
+        return sum([player[0].elo for player in players]) / len(players)
 
     def computeNetScore(self, player, match):
         return 0
@@ -73,6 +76,7 @@ class Elo():
         else:
             player[0].previousNetScore.append(player[1].netScore)
             return 0
+
     def computeStreak(self, player, hasWon):
         return 0
 
@@ -83,8 +87,8 @@ class Elo():
         print(match.team1)
         print(match.team2)
 
-        p1 = (1.0 / (1.0 + pow(10, ((AvgEloTeam2 - AvgEloTeam1) / 400.0))))
-        p2 = (1.0 / (1.0 + pow(10, ((AvgEloTeam1 - AvgEloTeam2) / 400.0))))
+        p1 = 1.0 / (1.0 + pow(10, ((AvgEloTeam2 - AvgEloTeam1) / 400.0)))
+        p2 = 1.0 / (1.0 + pow(10, ((AvgEloTeam1 - AvgEloTeam2) / 400.0)))
 
         baseEloTeam1 = 0
         baseEloTeam2 = 0
@@ -93,12 +97,12 @@ class Elo():
 
         if match.team1["score"] > match.team2["score"]:
             team1Won = True
-            baseEloTeam1 = round(self.K*(1.0 - p1))
-            baseEloTeam2 = round(self.K*(0.0 - p2))
+            baseEloTeam1 = round(self.K * (1.0 - p1))
+            baseEloTeam2 = round(self.K * (0.0 - p2))
         elif match.team1["score"] < match.team2["score"]:
             team2Won = True
-            baseEloTeam1 = round(self.K*(0.0 - p1))
-            baseEloTeam2 = round(self.K*(1.0 - p2))
+            baseEloTeam1 = round(self.K * (0.0 - p1))
+            baseEloTeam2 = round(self.K * (1.0 - p2))
         else:
             return
 
@@ -124,15 +128,15 @@ class Elo():
             player[0].elo += baseEloTeam2
 
 
-class Match():
+class Match:
     def __init__(self, id):
         self.id = id
-        self.team1 = {"score":0, "players":[]}
-        self.team2 = {"score":0, "players":[]}
+        self.team1 = {"score": 0, "players": []}
+        self.team2 = {"score": 0, "players": []}
 
     def buildTeam(self):
         choices = random.sample(players, k=12)
-        for id in range(12): # 12 player in the same match
+        for id in range(12):  # 12 player in the same match
             if id > 5:
                 self.team2["players"].append([choices[id], Stats()])
             else:
@@ -156,7 +160,9 @@ class Match():
             attacker[1].kill += 1
             target[1].death += 1
 
+
 matches = []
+
 
 def runSimulation():
     for id in range(1):
@@ -168,6 +174,7 @@ def runSimulation():
         matches.append(match)
         print("")
     print(players)
+
 
 ELO = Elo()
 runSimulation()
