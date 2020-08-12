@@ -7,15 +7,26 @@ Elo Algorithm for the POG Discord Bot based on a Custom Chess Elo Algorithm
 - [x] Classic Chess Elo between the average elo of each Team.
 
 ### Compute Individual Elo from direct Perf on the match
-- [ ] Compute Individual Elo on the netScore compare to everyone in the match (all the net score should be align between -1 and 1 highest netscore being 1 and Lowest being -1) @arthur
-- [ ] Compute Individual Elo on the number of assist compare to everyone in player's team (all the number of assist should be align between 0 and 1 then take standard deviation) @arthur
+- [x] Compute Individual Elo on the netScore compare to everyone in the match
+- [x] Compute Individual Elo on the number of assist compare to everyone in player's team
 
 ### Compute Individual Elo from direct Perf comparing his past
 - [ ] Compute Individual Elo base on Consistency on the 10 previous match
 - [ ] Compute Individual Elo based on the Winning/Losing Streak
 
+### Other
+- [ ] Warning when match is a draw, we should break the winStreak / looseStreak to all players and reward no Elo to anyone
+
 ## Algo Explain
-Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max
+Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max.
+
+Everyone in the same team win or loose the same base amount of Elo.
+
+The NetScore part of the individual Elo reward the best player of the game and punish the worst
+The Assits part of the individual Elo reward depending on the assists contribution for his team
+
+The Consistency part of the individual Elo reward the player when he plays better than his past Average netScore
+The Streak part of the individual Elo reward for having a Win streak and punish for having a loose streak
 
 At the end of each match,  
 
