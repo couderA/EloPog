@@ -41,6 +41,7 @@ class Stats:
         self.netScore = 0
         self.kill = 0
         self.death = 0
+        self.assists = 0
 
     def __repr__(self):
         return "Score {score} NetScore {netScore}".format(
@@ -52,19 +53,36 @@ class Elo:
     def __init__(self):
         self.K = 40
         self.WeightNetScore = 5
-        self.WeightAsssits = 0
-        self.WeightConsitency = 3
-        self.WeightStreak = 3
+        self.WeightAsssits = 2.2
+        self.WeightConsitency = 2.8
+        self.WeightStreak = 1.5
 
     def getAvgElo(self, team):
         players = team["players"]
         return sum([player[0].elo for player in players]) / len(players)
 
     def computeNetScore(self, player, match):
-        return 0
+        allPlayers = match.team1["players"] + match.team2["players"]
+        allNetScore = [player[1].netScore for player in allPlayers]
+        netscore = player[1].netScore
+        netScoreAlign = 0
+        if netscore > 0:
+            netScoreAlign = netscore / max(max(allNetScore),1)
+        elif netscore < 0:
+            netScoreAlign = netscore / max(abs(min(allNetScore)),1)
+        return self.WeightNetScore * netScoreAlign
 
     def computAssists(self, player, team):
-        return 0
+        allAsssits = [player[1].assists for player in team["players"]]
+        numberAssistsTeam = sum(allAsssits)
+        assists = player[1].assists
+
+        maxAllAssistPercent = max(allAsssits) / max(numberAssistsTeam, 1)
+        assistsPercent = assists / max(numberAssistsTeam, 1)
+
+        asssitAllign = assistsPercent / maxAllAssistPercent
+
+        return self.WeightAsssits * asssitAllign
 
     def computeConsistency(self, player):
         if len(player[0].previousNetScore) >= 5:
@@ -84,9 +102,6 @@ class Elo:
         AvgEloTeam1 = self.getAvgElo(match.team1)
         AvgEloTeam2 = self.getAvgElo(match.team2)
 
-        print(match.team1)
-        print(match.team2)
-
         p1 = 1.0 / (1.0 + pow(10, ((AvgEloTeam2 - AvgEloTeam1) / 400.0)))
         p2 = 1.0 / (1.0 + pow(10, ((AvgEloTeam1 - AvgEloTeam2) / 400.0)))
 
@@ -97,35 +112,32 @@ class Elo:
 
         if match.team1["score"] > match.team2["score"]:
             team1Won = True
-            baseEloTeam1 = round(self.K * (1.0 - p1))
-            baseEloTeam2 = round(self.K * (0.0 - p2))
+            baseEloTeam1 = self.K * (1.0 - p1)
+            baseEloTeam2 = self.K * (0.0 - p2)
         elif match.team1["score"] < match.team2["score"]:
             team2Won = True
-            baseEloTeam1 = round(self.K * (0.0 - p1))
-            baseEloTeam2 = round(self.K * (1.0 - p2))
+            baseEloTeam1 = self.K * (0.0 - p1)
+            baseEloTeam2 = self.K * (1.0 - p2)
         else:
             return
-
-        print(baseEloTeam1)
-        print(baseEloTeam2)
 
         for player in match.team1["players"]:
             # Compute Indiv perf here
             indivElo = baseEloTeam1
-            indivElo += computeNetScore(player, match)
-            indivElo += computAssists(player, match.team1)
-            indivElo += computeConsistency(player)
-            indivElo += computeStreak(player, team1Won)
-            player[0].elo += indivElo
+            indivElo += self.computeNetScore(player, match)
+            indivElo += self.computAssists(player, match.team1)
+            indivElo += self.computeConsistency(player)
+            indivElo += self.computeStreak(player, team1Won)
+            player[0].elo += round(indivElo)
 
         for player in match.team2["players"]:
             # Compute Indiv perf here
             indivElo = baseEloTeam2
-            indivElo += computeNetScore(player, match)
-            indivElo += computAssists(player, match.team)
-            indivElo += computeConsistency(player)
-            indivElo += computeStreak(player, team2Won)
-            player[0].elo += baseEloTeam2
+            indivElo += self.computeNetScore(player, match)
+            indivElo += self.computAssists(player, match.team2)
+            indivElo += self.computeConsistency(player)
+            indivElo += self.computeStreak(player, team2Won)
+            player[0].elo += round(indivElo)
 
 
 class Match:
@@ -148,31 +160,34 @@ class Match:
             condition = bool(random.getrandbits(1))
             teamAttack = self.team1
             teamTarget = self.team2
+            attackerSelected = random.randint(1, 3)
             if condition:
                 teamAttack = self.team2
                 teamTarget = self.team1
-            attacker = random.choice(teamAttack["players"])
+            attackers = random.sample(teamAttack["players"], k=attackerSelected)
             target = random.choice(teamTarget["players"])
             teamAttack["score"] += 1
-            attacker[1].score += 1
-            attacker[1].netScore += 1
+            attackers[0][1].score += 1
+            attackers[0][1].netScore += 1
             target[1].netScore -= 1
-            attacker[1].kill += 1
+            attackers[0][1].kill += 1
             target[1].death += 1
+            if bool(random.getrandbits(1)): #50% change of kill being an assist
+                for i in range(1, attackerSelected):
+                    attackers[i][1].assists += 1
 
 
 matches = []
 
 
 def runSimulation():
-    for id in range(1):
-        print("Match {0}".format(id))
+    print(players)
+    for id in range(100):
         match = Match(id)
         match.buildTeam()
         match.runMatch()
         ELO.computeElo(match)
         matches.append(match)
-        print("")
     print(players)
 
 
