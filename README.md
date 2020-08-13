@@ -14,9 +14,6 @@ Elo Algorithm for the POG Discord Bot based on a Custom Chess Elo Algorithm
 - [ ] Compute Individual Elo base on Consistency on the 10 previous match
 - [ ] Compute Individual Elo based on the Winning/Losing Streak
 
-### Other
-- [ ] Warning when match is a draw, we should break the winStreak / looseStreak to all players and reward no Elo to anyone
-
 ## Algo Explain
 Starting Elo at **2500** middle point to 0 and 5000 which is the Min and Max.
 

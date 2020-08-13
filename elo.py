@@ -5,9 +5,9 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.elo = 2500
-        self.previousNetScore = []
-        self.winStreak = 0
-        self.looseStreak = 0
+        self.previous_net_score = []
+        self.win_streak = 0
+        self.loose_streak = 0
 
     def __repr__(self):
         return "{name} -> {elo}".format(name=self.name, elo=self.elo)
@@ -19,106 +19,106 @@ class Player:
 class Stats:
     def __init__(self):
         self.score = 0
-        self.netScore = 0
+        self.net_score = 0
         self.kill = 0
         self.death = 0
         self.assists = 0
 
     def __repr__(self):
-        return "Score {score} NetScore {netScore}".format(
-            score=self.score, netScore=self.netScore
+        return "Score {score} net_score {net_score}".format(
+            score=self.score, net_score=self.net_score
         )
 
 
 class Elo:
     def __init__(self):
         self.K = 40
-        self.weightNetScore = 5
-        self.weightAsssits = 2.2
-        self.weightConsitency = 2.8
-        self.weightStreak = 1.5
+        self.weight_net_score = 5
+        self.weight_assits = 2.2
+        self.weight_consitency = 2.8
+        self.weight_streak = 1.5
 
-    def getAvgElo(self, team):
+    def get_avg_elo(self, team):
         players = team["players"]
         return sum([player[0].elo for player in players]) / len(players)
 
-    def computeNetScore(self, player, match):
-        allPlayers = match.team1["players"] + match.team2["players"]
-        allNetScore = [player[1].netScore for player in allPlayers]
-        netscore = player[1].netScore
-        netScoreAlign = 0
-        if netscore > 0:
-            netScoreAlign = netscore / max(max(allNetScore), 1)
-        elif netscore < 0:
-            netScoreAlign = netscore / max(abs(min(allNetScore)), 1)
-        return self.weightNetScore * netScoreAlign
+    def compute_net_score(self, player, match):
+        all_players = match.team1["players"] + match.team2["players"]
+        all_net_score = [player[1].net_score for player in all_players]
+        net_score = player[1].net_score
+        net_score_align = 0
+        if net_score > 0:
+            net_score_align = net_score / max(max(all_net_score), 1)
+        elif net_score < 0:
+            net_score_align = net_score / max(abs(min(all_net_score)), 1)
+        return self.weight_net_score * net_score_align
 
-    def computAssists(self, player, team):
-        allAsssits = [player[1].assists for player in team["players"]]
-        numberAssistsTeam = sum(allAsssits)
+    def comput_assists(self, player, team):
+        all_assits = [player[1].assists for player in team["players"]]
+        number_assists_team = sum(all_assits)
         assists = player[1].assists
 
-        maxAllAssistPercent = max(allAsssits) / max(numberAssistsTeam, 1)
-        assistsPercent = assists / max(numberAssistsTeam, 1)
+        max_all_assist_percent = max(all_assits) / max(number_assists_team, 1)
+        assists_percent = assists / max(number_assists_team, 1)
 
-        asssitAllign = assistsPercent / maxAllAssistPercent
+        assit_allign = assists_percent / max_all_assist_percent
 
-        return self.weightAsssits * asssitAllign
+        return self.weight_assits * assit_allign
 
-    def computeConsistency(self, player):
-        if len(player[0].previousNetScore) >= 5:
+    def compute_consistency(self, player):
+        if len(player[0].previous_net_score) >= 5:
             # Do thing here
-            if len(player[0].previousNetScore) == 10:
-                player[0].previousNetScore.pop(0)
-            player[0].previousNetScore.append(player[1].netScore)
+            if len(player[0].previous_net_score) == 10:
+                player[0].previous_net_score.pop(0)
+            player[0].previous_net_score.append(player[1].net_score)
             return 0
         else:
-            player[0].previousNetScore.append(player[1].netScore)
+            player[0].previous_net_score.append(player[1].net_score)
             return 0
 
-    def computeStreak(self, player, hasWon):
+    def compute_streak(self, player, hasWon):
         return 0
 
-    def computeElo(self, match):
-        AvgEloTeam1 = self.getAvgElo(match.team1)
-        AvgEloTeam2 = self.getAvgElo(match.team2)
+    def compute_elo(self, match):
+        avg_elo_team1 = self.get_avg_elo(match.team1)
+        avg_elo_team2 = self.get_avg_elo(match.team2)
 
-        p1 = 1.0 / (1.0 + pow(10, ((AvgEloTeam2 - AvgEloTeam1) / 400.0)))
-        p2 = 1.0 / (1.0 + pow(10, ((AvgEloTeam1 - AvgEloTeam2) / 400.0)))
+        p1 = 1.0 / (1.0 + pow(10, ((avg_elo_team2 - avg_elo_team1) / 400.0)))
+        p2 = 1.0 / (1.0 + pow(10, ((avg_elo_team1 - avg_elo_team2) / 400.0)))
 
-        baseEloTeam1 = 0
-        baseEloTeam2 = 0
-        team1Won = False
-        team2Won = False
+        base_elo_team1 = 0
+        base_elo_team2 = 0
+        team1_won = False
+        team2_won = False
 
         if match.team1["score"] > match.team2["score"]:
-            team1Won = True
-            baseEloTeam1 = self.K * (1.0 - p1)
-            baseEloTeam2 = self.K * (0.0 - p2)
+            team1_won = True
+            base_elo_team1 = self.K * (1.0 - p1)
+            base_elo_team2 = self.K * (0.0 - p2)
         elif match.team1["score"] < match.team2["score"]:
-            team2Won = True
-            baseEloTeam1 = self.K * (0.0 - p1)
-            baseEloTeam2 = self.K * (1.0 - p2)
+            team2_won = True
+            base_elo_team1 = self.K * (0.0 - p1)
+            base_elo_team2 = self.K * (1.0 - p2)
         else:
             return
 
         for player in match.team1["players"]:
             # Compute Indiv perf here
-            indivElo = baseEloTeam1
-            indivElo += self.computeNetScore(player, match)
-            indivElo += self.computAssists(player, match.team1)
-            indivElo += self.computeConsistency(player)
-            indivElo += self.computeStreak(player, team1Won)
-            player[0].elo += round(indivElo)
+            indiv_elo = base_elo_team1
+            indiv_elo += self.compute_net_score(player, match)
+            indiv_elo += self.comput_assists(player, match.team1)
+            indiv_elo += self.compute_consistency(player)
+            indiv_elo += self.compute_streak(player, team1_won)
+            player[0].elo += round(indiv_elo)
 
         for player in match.team2["players"]:
             # Compute Indiv perf here
-            indivElo = baseEloTeam2
-            indivElo += self.computeNetScore(player, match)
-            indivElo += self.computAssists(player, match.team2)
-            indivElo += self.computeConsistency(player)
-            indivElo += self.computeStreak(player, team2Won)
-            player[0].elo += round(indivElo)
+            indiv_elo = base_elo_team2
+            indiv_elo += self.compute_net_score(player, match)
+            indiv_elo += self.comput_assists(player, match.team2)
+            indiv_elo += self.compute_consistency(player)
+            indiv_elo += self.compute_streak(player, team2_won)
+            player[0].elo += round(indiv_elo)
 
 
 class Match:
@@ -127,7 +127,7 @@ class Match:
         self.team1 = {"score": 0, "players": []}
         self.team2 = {"score": 0, "players": []}
 
-    def buildTeam(self):
+    def build_team(self):
         choices = random.sample(PLAYERS, k=12)
         for id in range(12):  # 12 player in the same match
             if id > 5:
@@ -135,35 +135,35 @@ class Match:
             else:
                 self.team1["players"].append([choices[id], Stats()])
 
-    def runMatch(self):
+    def run_match(self):
         nbOfAction = random.randint(150, 200)
         for _ in range(nbOfAction):
             condition = bool(random.getrandbits(1))
-            teamAttack = self.team1
-            teamTarget = self.team2
-            attackerSelected = random.randint(1, 3)
+            team_attack = self.team1
+            team_target = self.team2
+            attacker_selected = random.randint(1, 3)
             if condition:
-                teamAttack = self.team2
-                teamTarget = self.team1
-            attackers = random.sample(teamAttack["players"], k=attackerSelected)
-            target = random.choice(teamTarget["players"])
-            teamAttack["score"] += 1
+                team_attack = self.team2
+                team_target = self.team1
+            attackers = random.sample(team_attack["players"], k=attacker_selected)
+            target = random.choice(team_target["players"])
+            team_attack["score"] += 1
             attackers[0][1].score += 1
-            attackers[0][1].netScore += 1
-            target[1].netScore -= 1
+            attackers[0][1].net_score += 1
+            target[1].net_score -= 1
             attackers[0][1].kill += 1
             target[1].death += 1
             if bool(random.getrandbits(1)):  # 50% change of kill being an assist
-                for i in range(1, attackerSelected):
+                for i in range(1, attacker_selected):
                     attackers[i][1].assists += 1
 
 
-def runSimulation(ELO):
-    for id in range(100):
+def run_simulation(ELO):
+    for id in range(50):
         match = Match(id)
-        match.buildTeam()
-        match.runMatch()
-        ELO.computeElo(match)
+        match.build_team()
+        match.run_match()
+        ELO.compute_elo(match)
         MATCHES.append(match)
 
 
@@ -173,7 +173,7 @@ PLAYERS = [Player(i) for i in range(1, 16)]
 
 def main():
     ELO = Elo()
-    runSimulation(ELO)
+    run_simulation(ELO)
 
 
 if __name__ == "__main__":
