@@ -16,25 +16,6 @@ class Player:
         return "{name} -> {elo}".format(name=self.name, elo=self.elo)
 
 
-players = [
-    Player("1"),
-    Player("2"),
-    Player("3"),
-    Player("4"),
-    Player("5"),
-    Player("6"),
-    Player("7"),
-    Player("8"),
-    Player("9"),
-    Player("10"),
-    Player("11"),
-    Player("12"),
-    Player("13"),
-    Player("14"),
-    Player("15"),
-]
-
-
 class Stats:
     def __init__(self):
         self.score = 0
@@ -52,10 +33,10 @@ class Stats:
 class Elo:
     def __init__(self):
         self.K = 40
-        self.WeightNetScore = 5
-        self.WeightAsssits = 2.2
-        self.WeightConsitency = 2.8
-        self.WeightStreak = 1.5
+        self.weightNetScore = 5
+        self.weightAsssits = 2.2
+        self.weightConsitency = 2.8
+        self.weightStreak = 1.5
 
     def getAvgElo(self, team):
         players = team["players"]
@@ -67,10 +48,10 @@ class Elo:
         netscore = player[1].netScore
         netScoreAlign = 0
         if netscore > 0:
-            netScoreAlign = netscore / max(max(allNetScore),1)
+            netScoreAlign = netscore / max(max(allNetScore), 1)
         elif netscore < 0:
-            netScoreAlign = netscore / max(abs(min(allNetScore)),1)
-        return self.WeightNetScore * netScoreAlign
+            netScoreAlign = netscore / max(abs(min(allNetScore)), 1)
+        return self.weightNetScore * netScoreAlign
 
     def computAssists(self, player, team):
         allAsssits = [player[1].assists for player in team["players"]]
@@ -82,7 +63,7 @@ class Elo:
 
         asssitAllign = assistsPercent / maxAllAssistPercent
 
-        return self.WeightAsssits * asssitAllign
+        return self.weightAsssits * asssitAllign
 
     def computeConsistency(self, player):
         if len(player[0].previousNetScore) >= 5:
@@ -147,7 +128,7 @@ class Match:
         self.team2 = {"score": 0, "players": []}
 
     def buildTeam(self):
-        choices = random.sample(players, k=12)
+        choices = random.sample(PLAYERS, k=12)
         for id in range(12):  # 12 player in the same match
             if id > 5:
                 self.team2["players"].append([choices[id], Stats()])
@@ -172,24 +153,28 @@ class Match:
             target[1].netScore -= 1
             attackers[0][1].kill += 1
             target[1].death += 1
-            if bool(random.getrandbits(1)): #50% change of kill being an assist
+            if bool(random.getrandbits(1)):  # 50% change of kill being an assist
                 for i in range(1, attackerSelected):
                     attackers[i][1].assists += 1
 
 
-matches = []
-
-
-def runSimulation():
-    print(players)
+def runSimulation(ELO):
     for id in range(100):
         match = Match(id)
         match.buildTeam()
         match.runMatch()
         ELO.computeElo(match)
-        matches.append(match)
-    print(players)
+        MATCHES.append(match)
 
 
-ELO = Elo()
-runSimulation()
+MATCHES = []
+PLAYERS = [Player(i) for i in range(1, 16)]
+
+
+def main():
+    ELO = Elo()
+    runSimulation(ELO)
+
+
+if __name__ == "__main__":
+    main()
