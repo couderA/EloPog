@@ -33,10 +33,10 @@ class Stats:
 class Elo:
     def __init__(self):
         self.K = 40
-        self.weight_net_score = 5
+        self.weight_net_score = 4.8
         self.weight_assits = 2.2
         self.weight_consitency = 2.8
-        self.weight_streak = 1.5
+        self.weight_streak = 1.2
 
     def get_avg_elo(self, team):
         players = team["players"]
@@ -73,6 +73,10 @@ class Elo:
         return 0
 
     def compute_streak(self, player, hasWon):
+        if hasWon and player[0].win_streak >= 3:
+            return min(player[0].win_streak, 8) * self.weight_streak
+        elif not hasWon and player[0].loose_streak >= 3:
+            return min(player[0].loose_streak, 8) * self.weight_streak * -1
         return 0
 
     def compute_elo(self, match):
@@ -182,7 +186,6 @@ class Match:
                 for i in range(1, attacker_selected):
                     attackers[i][1].assists += 1
 
-    def update_players(self):
         for player in self.team1["players"]:
             if len(player[0].previous_net_score) == 10:
                 player[0].previous_net_score.pop(0)
@@ -222,7 +225,6 @@ def run_simulation(ELO):
         match.build_team()
         match.run_match()
         ELO.compute_elo(match)
-        match.update_players()
         MATCHES.append(match)
     print(PLAYERS)
 
