@@ -228,7 +228,6 @@ def run_simulation(ELO):
         match.run_match()
         ELO.compute_elo(match)
         MATCHES.append(match)
-    print(PLAYERS)
 
 
 MATCHES = []
