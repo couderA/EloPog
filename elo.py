@@ -29,7 +29,6 @@ class Stats:
             score=self.score, net_score=self.net_score
         )
 
-
 class Elo:
     def __init__(self):
         self.K = 40
