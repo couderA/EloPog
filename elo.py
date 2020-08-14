@@ -68,13 +68,9 @@ class Elo:
     def compute_consistency(self, player):
         if len(player[0].previous_net_score) >= 5:
             # Do thing here
-            if len(player[0].previous_net_score) == 10:
-                player[0].previous_net_score.pop(0)
-            player[0].previous_net_score.append(player[1].net_score)
+            # print(sum(player[0].previous_net_score) / len(player[0].previous_net_score))
             return 0
-        else:
-            player[0].previous_net_score.append(player[1].net_score)
-            return 0
+        return 0
 
     def compute_streak(self, player, hasWon):
         return 0
@@ -110,6 +106,10 @@ class Elo:
             indiv_elo += self.compute_consistency(player)
             indiv_elo += self.compute_streak(player, team1_won)
             player[0].elo += round(indiv_elo)
+            if player[0].elo > 5000:
+                 player[0].elo = 5000
+            if player[0].elo < 0:
+                 player[0].elo = 0
 
         for player in match.team2["players"]:
             # Compute Indiv perf here
@@ -119,6 +119,10 @@ class Elo:
             indiv_elo += self.compute_consistency(player)
             indiv_elo += self.compute_streak(player, team2_won)
             player[0].elo += round(indiv_elo)
+            if player[0].elo > 5000:
+                 player[0].elo = 5000
+            if player[0].elo < 0:
+                 player[0].elo = 0
 
 
 class Match:
@@ -147,24 +151,80 @@ class Match:
                 team_target = self.team1
             attackers = random.sample(team_attack["players"], k=attacker_selected)
             target = random.choice(team_target["players"])
-            team_attack["score"] += 1
-            attackers[0][1].score += 1
-            attackers[0][1].net_score += 1
-            target[1].net_score -= 1
-            attackers[0][1].kill += 1
-            target[1].death += 1
+
+            if int(attackers[0][0].name) == 3 and bool(random.getrandbits(1)): # player with name3 has 50% chance action is nulled
+                continue
+            else:
+                team_attack["score"] += 1
+                attackers[0][1].score += 1
+                attackers[0][1].net_score += 1
+                target[1].net_score -= 1
+                attackers[0][1].kill += 1
+                target[1].death += 1
+
+            if int(attackers[0][0].name) in [5,10,15] and bool(random.getrandbits(1)):# player with name 5, 10 or 15 has 50% chance action is doubled
+                team_attack["score"] += 1
+                attackers[0][1].score += 1
+                attackers[0][1].net_score += 1
+                target[1].net_score -= 1
+                attackers[0][1].kill += 1
+                target[1].death += 1
+
+            if int(attackers[0][0].name) == 10 and bool(random.getrandbits(1)):  # player with name 10 has 50% chance action is doubled
+                team_attack["score"] += 1
+                attackers[0][1].score += 1
+                attackers[0][1].net_score += 1
+                target[1].net_score -= 1
+                attackers[0][1].kill += 1
+                target[1].death += 1
+
             if bool(random.getrandbits(1)):  # 50% change of kill being an assist
                 for i in range(1, attacker_selected):
                     attackers[i][1].assists += 1
 
+    def update_players(self):
+        for player in self.team1["players"]:
+            if len(player[0].previous_net_score) == 10:
+                player[0].previous_net_score.pop(0)
+            player[0].previous_net_score.append(player[1].net_score)
+
+        for player in self.team2["players"]:
+            if len(player[0].previous_net_score) == 10:
+                player[0].previous_net_score.pop(0)
+            player[0].previous_net_score.append(player[1].net_score)
+
+        if self.team1["score"] > self.team2["score"]:
+            for player in self.team1["players"]:
+                player[0].win_streak += 1
+                player[0].loose_streak = 0
+            for player in self.team2["players"]:
+                player[0].win_streak = 0
+                player[0].loose_streak += 1
+        elif self.team2["score"] > self.team1["score"]:
+            for player in self.team1["players"]:
+                player[0].win_streak = 0
+                player[0].loose_streak += 1
+            for player in self.team2["players"]:
+                player[0].win_streak += 1
+                player[0].loose_streak = 0
+        else:
+            for player in self.team1["players"]:
+                player[0].win_streak = 0
+                player[0].loose_streak = 0
+            for player in self.team2["players"]:
+                player[0].win_streak = 0
+                player[0].loose_streak = 0
+
 
 def run_simulation(ELO):
-    for id in range(50):
+    for id in range(2000):
         match = Match(id)
         match.build_team()
         match.run_match()
         ELO.compute_elo(match)
+        match.update_players()
         MATCHES.append(match)
+    print(PLAYERS)
 
 
 MATCHES = []
