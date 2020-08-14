@@ -68,8 +68,10 @@ class Elo:
     def compute_consistency(self, player):
         if len(player[0].previous_net_score) >= 5:
             # Do thing here
-            # print(sum(player[0].previous_net_score) / len(player[0].previous_net_score))
-            return 0
+            avg = sum(player[0].previous_net_score) / len(player[0].previous_net_score)
+            delta_ref = 10
+            delta = (player[1].net_score - avg)
+            return self.weight_assits * (delta / delta_ref)
         return 0
 
     def compute_streak(self, player, hasWon):
